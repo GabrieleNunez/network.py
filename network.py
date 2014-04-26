@@ -16,14 +16,18 @@ interface = "Local Area Connection"
 
 #not done yet, don't use, still implementing
 def spoof(mac):
+	#indev unstable
+	print("This function is not ready yet and may not work correctly")
 	handle = winreg.OpenKey(winreg.HKEY_LOCAL_MACHINE,ADAPTER_REGISTRY_LOCATION)
 	index = 0
 	while True:
 		try:
 			keyName = winreg.EnumKey(handle,index)
-			index++
-		except winreg.WindowsError: break
+			print(keyName)
+			index = index + 1
+		except OSError: break
 	winreg.CloseKey(handle)
+	
 def TryCall(call):
 	try:
 		subprocess.check_call(call,shell=True)
@@ -47,17 +51,21 @@ if len(sys.argv) >= 2:
 	if sys.argv[1].lower() == "list":
 		ListInterfaces()
 		sys.exit()
+	elif sys.argv[1].lower() == "spoof":
+		#placeholder
+		#testing purposes only
+		spoof("DevMac")
 	else:
 		interface = sys.argv[1]
+		if len(sys.argv) >= 3:
+			if sys.argv[2].lower() == "off":
+				AdjustInterface(interface,COMMAND_OFF)
+			elif sys.argv[2].lower() == "on":
+				AdjustInterface(interface,COMMAND_ON)
+			else: 
+				print("Invalid argument")
+		else:
+			print("No command specified to work on {0} interface".format(interface))
 else:
-	print("No interface specified")
+	print("No additional command specified")
 	sys.exit()
-if len(sys.argv) >= 3:
-	if sys.argv[2].lower() == "off":
-		AdjustInterface(interface,COMMAND_OFF)
-	elif sys.argv[2].lower() == "on":
-		AdjustInterface(interface,COMMAND_ON)
-	else: 
-		print("Invalid argument")
-else:
-	print("No command specified to work on {0} interface".format(interface))
