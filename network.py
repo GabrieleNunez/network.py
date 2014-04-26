@@ -1,17 +1,29 @@
 #Windows Only Script
 #Author: Gabriele M. Nunez (P13Darksight) (http://thecoconutcoder.com
-#Lets you enable/disable/list your network interaces as well as spoof
+#Lets you enable/disable/list your network interfaces as well as spoof
 #TODO mac address spoofing
 
 import sys
 import subprocess
+import winreg
 
 COMMAND_OFF = 1
 COMMAND_ON = 2
 COMMAND_LIST = 3
+ADAPTER_REGISTRY_LOCATION = "SYSTEM\\CurrentControlSet\Control\Class\{4d36e972-e325-11ce-bfc1-08002be10318}"
 
 interface = "Local Area Connection"
 
+#not done yet, don't use, still implementing
+def spoof(mac):
+	handle = winreg.OpenKey(winreg.HKEY_LOCAL_MACHINE,ADAPTER_REGISTRY_LOCATION)
+	index = 0
+	while True:
+		try:
+			keyName = winreg.EnumKey(handle,index)
+			index++
+		except winreg.WindowsError: break
+	winreg.CloseKey(handle)
 def TryCall(call):
 	try:
 		subprocess.check_call(call,shell=True)
