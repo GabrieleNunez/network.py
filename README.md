@@ -2,7 +2,9 @@ network.py
 ==========
 
 *network.py* is a handy script that lets you enable/disable/alter/spoof mac address on your computer. 
-It does use windows code so it is windows only. SORRY! It was written in *Python 3.4*
+It does use windows code so it is windows only. SORRY! 
+
+It was written in *Python 3.4* if you are curious
 
 And it has been tested on Windows 8. If it works on anything else let me know! Or if any issues then well mark them up!
 
@@ -10,6 +12,7 @@ And it has been tested on Windows 8. If it works on anything else let me know! O
 
 * Better code documentation
 * Easier way to modify interfaces and adapters (Possibly alias them and bind them together?)
+* Implement Mac address generator
 
 ##Some Examples
 ##Spoofing
