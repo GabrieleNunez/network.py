@@ -10,24 +10,44 @@ import winreg
 COMMAND_OFF = 1
 COMMAND_ON = 2
 COMMAND_LIST = 3
-ADAPTER_REGISTRY_LOCATION = "SYSTEM\\CurrentControlSet\Control\Class\{4d36e972-e325-11ce-bfc1-08002be10318}"
-
+REG_ADAPTERS = "SYSTEM\\CurrentControlSet\Control\Class\{4d36e972-e325-11ce-bfc1-08002be10318}"
+REG_VALUE_NETWORKADDRESS = "NetworkAddress"
 interface = "Local Area Connection"
 
-#not done yet, don't use, still implementing
 def spoof(mac):
-	#indev unstable
-	print("This function is not ready yet and may not work correctly")
-	handle = winreg.OpenKey(winreg.HKEY_LOCAL_MACHINE,ADAPTER_REGISTRY_LOCATION)
+	handle = winreg.OpenKey(winreg.HKEY_LOCAL_MACHINE,REG_ADAPTERS)
 	index = 0
 	while True:
 		try:
 			keyName = winreg.EnumKey(handle,index)
-			print(keyName)
-			index = index + 1
+			#As long as keyName does not equal "Properties" we can continue
+			if keyName != "Properties":
+				try:
+					keyHandle = winreg.OpenKey(handle,keyName)
+					query = winreg.QueryValueEx(keyHandle,"DriverDesc")
+					print("{0}.\t{1}".format(index + 1,query[0]))
+					winreg.CloseKey(keyHandle)
+					index = index + 1
+				except OSError: winreg.CloseKey(handle)
+			else : break
 		except OSError: break
+	choice = input("Select your choice. Use the numbers: ")
+	try:
+		index = int(choice) - 1
+		mac = mac.replace(":","")
+		mac = mac.replace("-","")
+		mac = mac.upper()
+		if len(mac) == 12:
+			keyName = winreg.EnumKey(handle,index)
+			keyHandle = winreg.OpenKey(handle,keyName,access=winreg.KEY_WRITE)
+			winreg.SetValueEx(keyHandle,REG_VALUE_NETWORKADDRESS,0,winreg.REG_SZ,mac)
+			winreg.CloseKey(keyHandle)
+			print("Applying Mac Address {0} to device".format(mac))
+		else:
+			print("Failed to apply")
+	except TypeError: 
+		print("Bad Choice")
 	winreg.CloseKey(handle)
-	
 def TryCall(call):
 	try:
 		subprocess.check_call(call,shell=True)
@@ -54,7 +74,9 @@ if len(sys.argv) >= 2:
 	elif sys.argv[1].lower() == "spoof":
 		#placeholder
 		#testing purposes only
-		spoof("DevMac")
+		if len(sys.argv) >= 3:
+			spoof(sys.argv[2])
+		else: print("No mac address provided. Cannot continue")
 	else:
 		interface = sys.argv[1]
 		if len(sys.argv) >= 3:
@@ -68,4 +90,3 @@ if len(sys.argv) >= 2:
 			print("No command specified to work on {0} interface".format(interface))
 else:
 	print("No additional command specified")
-	sys.exit()
