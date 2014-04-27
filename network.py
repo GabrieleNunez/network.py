@@ -23,7 +23,7 @@
 import sys
 import subprocess
 import winreg
-
+import re
 
 #Initialize any variables
 #Will use these as constants
@@ -59,8 +59,7 @@ def Spoof(mac):
 	try:
 		index = int(choice) - 1
 		if mac.lower() != "reset":
-			mac = mac.replace(":","")
-			mac = mac.replace("-","")
+			mac = re.sub("[:-]","",mac)
 			mac = mac.upper()
 			if len(mac) == 12:
 				keyName = winreg.EnumKey(handle,index)
@@ -75,7 +74,7 @@ def Spoof(mac):
 			keyHandle = winreg.OpenKey(handle,keyname,access=winreg.KEY_WRITE)
 			winreg.DeleteValue(keyHandle,REG_VALUE_NETWORKADDRESS)
 			winreg.CloseKey(keyHandle)
-			printf("Mac address reset. Reset your interface now")
+			print("Mac address reset. Reset your interface now")
 	except TypeError: 
 		print("Bad Choice")
 	winreg.CloseKey(handle)
