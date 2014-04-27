@@ -10,6 +10,7 @@ And it has been tested on Windows 8. If it works on anything else let me know! O
 
 * Better code documentation
 * Easier way to modify interfaces and adapters (Possibly alias them and bind them together?)
+* Implement Mac address generator
 
 ##Some Examples
 ##Spoofing
