@@ -7,6 +7,10 @@
 #> [follow prompts]
 #> python network.py ["interface name here"] reset
 #--------------------------------------------
+#To reset to default mac
+#> python network.py spoof reset
+#> [follow prompts]
+#> python network.py ["interface name here"] reset
 #example for network interface manipulation
 #To list available interfaces:
 #--------------------------------------------
@@ -15,6 +19,7 @@
 #To turn off,on,reset interface
 #--------------------------------------------
 #> python network.py "[interface name here"] [on,off,reset]
+
 import sys
 import subprocess
 import winreg
@@ -28,7 +33,7 @@ REG_ADAPTERS = "SYSTEM\\CurrentControlSet\Control\Class\{4d36e972-e325-11ce-bfc1
 REG_VALUE_NETWORKADDRESS = "NetworkAddress"
 interface = "Local Area Connection"
 
-def spoof(mac):
+def Spoof(mac):
 	handle = winreg.OpenKey(winreg.HKEY_LOCAL_MACHINE,REG_ADAPTERS)
 	index = 0
 	while True:
@@ -47,17 +52,24 @@ def spoof(mac):
 	choice = input("Select your choice. Use the numbers: ")
 	try:
 		index = int(choice) - 1
-		mac = mac.replace(":","")
-		mac = mac.replace("-","")
-		mac = mac.upper()
-		if len(mac) == 12:
-			keyName = winreg.EnumKey(handle,index)
-			keyHandle = winreg.OpenKey(handle,keyName,access=winreg.KEY_WRITE)
-			winreg.SetValueEx(keyHandle,REG_VALUE_NETWORKADDRESS,0,winreg.REG_SZ,mac)
-			winreg.CloseKey(keyHandle)
-			print("Applying Mac Address {0} to device".format(mac))
+		if mac.lower() != "reset":
+			mac = mac.replace(":","")
+			mac = mac.replace("-","")
+			mac = mac.upper()
+			if len(mac) == 12:
+				keyName = winreg.EnumKey(handle,index)
+				keyHandle = winreg.OpenKey(handle,keyName,access=winreg.KEY_WRITE)
+				winreg.SetValueEx(keyHandle,REG_VALUE_NETWORKADDRESS,0,winreg.REG_SZ,mac)
+				winreg.CloseKey(keyHandle)
+				print("Applying Mac Address {0} to device".format(mac))
+			else:
+				print("Failed to apply")
 		else:
-			print("Failed to apply")
+			keyname = winreg.EnumKey(handle,index)
+			keyHandle = winreg.OpenKey(handle,keyname,access=winreg.KEY_WRITE)
+			winreg.DeleteValue(keyHandle,REG_VALUE_NETWORKADDRESS)
+			winreg.CloseKey(keyHandle)
+			printf("Mac address reset. Reset your interface now")
 	except TypeError: 
 		print("Bad Choice")
 	winreg.CloseKey(handle)
@@ -88,10 +100,9 @@ def ListInterfaces():
 if len(sys.argv) >= 2:
 	if sys.argv[1].lower() == "list":
 		ListInterfaces()
-		sys.exit()
 	elif sys.argv[1].lower() == "spoof":
 		if len(sys.argv) >= 3:
-			spoof(sys.argv[2])
+			Spoof(sys.argv[2])
 		else: print("No mac address provided. Cannot continue")
 	else:
 		interface = sys.argv[1]
