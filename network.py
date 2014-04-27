@@ -1,7 +1,20 @@
 #Windows Only Script
-#Author: Gabriele M. Nunez (P13Darksight) (http://thecoconutcoder.com
+#Author: Gabriele M. Nunez (P13Darksight) (http://thecoconutcoder.com)
 #Lets you enable/disable/list your network interfaces as well as spoof
-
+#example for spoof
+#--------------------------------------------
+#> python network.py spoof [mac address here]
+#> [follow prompts]
+#> python network.py ["interface name here"] reset
+#--------------------------------------------
+#example for network interface manipulation
+#To list available interfaces:
+#--------------------------------------------
+#> python network.py list
+#--------------------------------------------
+#To turn off,on,reset interface
+#--------------------------------------------
+#> python network.py "[interface name here"] [on,off,reset]
 import sys
 import subprocess
 import winreg
@@ -9,6 +22,8 @@ import winreg
 COMMAND_OFF = 1
 COMMAND_ON = 2
 COMMAND_LIST = 3
+COMMAND_RESET = 0
+
 REG_ADAPTERS = "SYSTEM\\CurrentControlSet\Control\Class\{4d36e972-e325-11ce-bfc1-08002be10318}"
 REG_VALUE_NETWORKADDRESS = "NetworkAddress"
 interface = "Local Area Connection"
@@ -59,8 +74,13 @@ def AdjustInterface(interfaceName,op):
 		cmd = "disable"
 	else:
 		cmd = ""
-	print("Adjusting Interface: {0}".format(interfaceName))
-	TryCall("netsh interface set interface name=\"{0}\" {1}".format(interfaceName,cmd))
+	if op != COMMAND_RESET:
+		print("Adjusting Interface: {0}".format(interfaceName))
+		TryCall("netsh interface set interface name=\"{0}\" {1}".format(interfaceName,cmd))
+	else:
+		print("Resetting interface: {0}".format(interfaceName))
+		TryCall("netsh interface set interface name=\"{0}\" disable".format(interfaceName))
+		TryCall("netsh interface set interface name=\"{0}\" enable".format(interfaceName))
 	
 def ListInterfaces():
 	TryCall("netsh interface show interface")
@@ -80,6 +100,8 @@ if len(sys.argv) >= 2:
 				AdjustInterface(interface,COMMAND_OFF)
 			elif sys.argv[2].lower() == "on":
 				AdjustInterface(interface,COMMAND_ON)
+			elif sys.argv[2].lower() == "reset":
+				AdjustInterface(interface,COMMAND_RESET)
 			else: 
 				print("Invalid argument")
 		else:
