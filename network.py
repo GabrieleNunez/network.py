@@ -24,15 +24,21 @@ import sys
 import subprocess
 import winreg
 
+
+#Initialize any variables
+#Will use these as constants
 COMMAND_OFF = 1
 COMMAND_ON = 2
 COMMAND_LIST = 3
 COMMAND_RESET = 0
-
 REG_ADAPTERS = "SYSTEM\\CurrentControlSet\Control\Class\{4d36e972-e325-11ce-bfc1-08002be10318}"
 REG_VALUE_NETWORKADDRESS = "NetworkAddress"
+
 interface = "Local Area Connection"
 
+#Spoof(mac) is a function that lets us modify our network card's physical address
+#By doing this we can "imitate" other device's on the network
+#Many possibilities with spoofing
 def Spoof(mac):
 	handle = winreg.OpenKey(winreg.HKEY_LOCAL_MACHINE,REG_ADAPTERS)
 	index = 0
@@ -45,7 +51,7 @@ def Spoof(mac):
 					query = winreg.QueryValueEx(keyHandle,"DriverDesc")
 					print("{0}.\t{1}".format(index + 1,query[0]))
 					winreg.CloseKey(keyHandle)
-					index = index + 1
+					index += 1
 				except OSError: winreg.CloseKey(handle)
 			else : break
 		except OSError: break
@@ -73,11 +79,16 @@ def Spoof(mac):
 	except TypeError: 
 		print("Bad Choice")
 	winreg.CloseKey(handle)
+
+#TryCall(call) is a simple helper function that wraps subprocess.check_call around a try catch statement
+#If it fails we simply end it with a print statement saying there was a problem with execution
 def TryCall(call):
 	try:
 		subprocess.check_call(call,shell=True)
 	except subprocess.CalledProcessError: print("There was a problem with execution")
-	
+
+#AdjustInterface(interfaceName,op) is a function that lets us work with the network "interface"
+#It basically figures out what we want to do and then calls netsh through the shell
 def AdjustInterface(interfaceName,op):
 	cmd = ""
 	if op == COMMAND_ON:
@@ -93,10 +104,15 @@ def AdjustInterface(interfaceName,op):
 		print("Resetting interface: {0}".format(interfaceName))
 		TryCall("netsh interface set interface name=\"{0}\" disable".format(interfaceName))
 		TryCall("netsh interface set interface name=\"{0}\" enable".format(interfaceName))
-	
+
+#ListInterfaces() simply takes the shell output from "netsh show interface"
+#It tells user's what interfaces are available to work with
+#This is what they will pass as a argument to network.py
 def ListInterfaces():
 	TryCall("netsh interface show interface")
-	
+
+#Begin Script Execution
+#Check sys.argv length make sure we have more then 2 arguments being passed
 if len(sys.argv) >= 2:
 	if sys.argv[1].lower() == "list":
 		ListInterfaces()
