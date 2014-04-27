@@ -1,7 +1,6 @@
 #Windows Only Script
 #Author: Gabriele M. Nunez (P13Darksight) (http://thecoconutcoder.com
 #Lets you enable/disable/list your network interfaces as well as spoof
-#TODO mac address spoofing
 
 import sys
 import subprocess
