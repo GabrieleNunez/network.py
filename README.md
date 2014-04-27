@@ -12,7 +12,6 @@ And it has been tested on Windows 8. If it works on anything else let me know! O
 * Easier way to modify interfaces and adapters (Possibly alias them and bind them together?)
 
 ##Some Examples
-=============
 ##Spoofing
 --------------------------------------------
 ```
@@ -22,20 +21,20 @@ And it has been tested on Windows 8. If it works on anything else let me know! O
 ```
 --------------------------------------------
 ##To reset to default mac address
+--------------------------------------------
 ```
 > python network.py spoof reset
 > [follow prompts]
 > python network.py ["interface name here"] reset
 ```
 --------------------------------------------
-##Example for network interface manipulation
-To list available interfaces:
+##To list available interfaces:
 --------------------------------------------
 ```
 > python network.py list
 ```
 --------------------------------------------
-To turn off,on,reset interface
+##To turn off,on,reset interface
 --------------------------------------------
 ```
 > python network.py "[interface name here"] [on,off,reset]
