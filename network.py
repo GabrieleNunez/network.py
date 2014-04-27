@@ -20,7 +20,6 @@ def spoof(mac):
 	while True:
 		try:
 			keyName = winreg.EnumKey(handle,index)
-			#As long as keyName does not equal "Properties" we can continue
 			if keyName != "Properties":
 				try:
 					keyHandle = winreg.OpenKey(handle,keyName)
@@ -72,8 +71,6 @@ if len(sys.argv) >= 2:
 		ListInterfaces()
 		sys.exit()
 	elif sys.argv[1].lower() == "spoof":
-		#placeholder
-		#testing purposes only
 		if len(sys.argv) >= 3:
 			spoof(sys.argv[2])
 		else: print("No mac address provided. Cannot continue")
