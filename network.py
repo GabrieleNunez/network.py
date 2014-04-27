@@ -38,7 +38,8 @@ REG_VALUE_NETWORKADDRESS = "NetworkAddress"
 interface = "Local Area Connection"
 
 # generates a mac address with the specified prefix
-def MacGen(prefix):
+# TODO need to implement
+def MACGen(prefix):
     if prefix == None:
         prefix = "02"
     mac = prefix
