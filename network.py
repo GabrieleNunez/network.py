@@ -1,30 +1,33 @@
-# Windows Only Script
-# Author: Gabriele M. Nunez (P13Darksight) (http://thecoconutcoder.com)
-# Lets you enable/disable/list your network interfaces as well as spoof
-# example for spoof
-# --------------------------------------------
-# > python network.py spoof [mac address here]
-# > [follow prompts]
-# > python network.py ["interface name here"] reset
-# --------------------------------------------
-# To reset to default mac
-# > python network.py spoof reset
-# > [follow prompts]
-# > python network.py ["interface name here"] reset
-# example for network interface manipulation
-# To list available interfaces:
-# --------------------------------------------
-# > python network.py list
-# --------------------------------------------
-# To turn off, on, reset interface
-# --------------------------------------------
-# > python network.py "[interface name here"] [on, off, reset]
-
+"""
+Windows Only Script
+Author: Gabriele M. Nunez (P13Darksight) (http://thecoconutcoder.com)
+Lets you enable/disable/list your network interfaces as well as spoof
+example for spoof
+--------------------------------------------
+> python network.py spoof [mac address here]
+> [follow prompts]
+> python network.py ["interface name here"] reset
+--------------------------------------------
+To reset to default mac
+> python network.py spoof reset
+> [follow prompts]
+> python network.py ["interface name here"] reset
+example for network interface manipulation
+To list available interfaces:
+--------------------------------------------
+> python network.py list
+--------------------------------------------
+To turn off, on, reset interface
+--------------------------------------------
+> python network.py "[interface name here"] [on, off, reset]
+"""
 import sys
 import subprocess
 import winreg
 import re
 import random
+import os
+import os.path
 
 # Initialize any variables
 # Will use these as constants
@@ -37,19 +40,38 @@ REG_VALUE_NETWORKADDRESS = "NetworkAddress"
 
 interface = "Local Area Connection"
 
-# generates a mac address with the specified prefix
-# TODO need to implement
+
 def MACGen(prefix):
+    """
+    TODO need to implement
+    Generates a mac address with the specified prefix
+    """
     if prefix == None:
         prefix = "02"
     mac = prefix
 
-# Spoof(mac) is a function that lets us modify our network card's physical address
-# By doing this we can "imitate" other device's on the network
-# Many possibilities with spoofing
+def RegSaveKey(key, path):
+    """
+    SaveKey(key, path) checks if a file exist, deletes it and then saves the registry key
+	Requires SeBackupPrivilege need to figure out how to get this privilege
+	Probably can get it through pywin32 (need to research it)
+    """
+    if os.path.isfile(path):
+        os.remove(path)
+    try:
+        winreg.SaveKey(key, path)
+    except OSError:
+        print("Does not have permission to save key")
+		
 def Spoof(mac):
+    """ 
+    Spoof(mac) is a function that lets us modify our network card's physical address. 
+    By doing this we can "imitate" other device's on the network.
+    Many possibilities with spoofing
+	"""
     # first open a handle to the key in the registry that contains all the adapter information
     handle = winreg.OpenKey(winreg.HKEY_LOCAL_MACHINE, REG_ADAPTERS)
+    RegSaveKey(handle, "adapters.pyreg")
     index = 0
     # loop indefinitely until either an OSError occurs which winreg.EnumKey will cause once the value at index isn't available or until we find properties
     # overkill to check for both but better safe than sorry
@@ -92,6 +114,7 @@ def Spoof(mac):
                 # if the value is there it will overwrite it otherwise it will create it
                 keyName = winreg.EnumKey(handle, index)
                 keyHandle = winreg.OpenKey(handle, keyName, access=winreg.KEY_WRITE)
+                RegSaveKey(keyHandle, "{0}.pyreg".format(query[0]))
                 winreg.SetValueEx(keyHandle, REG_VALUE_NETWORKADDRESS, 0, winreg.REG_SZ, mac)
                 # and of course close our handle to our key that we modified
                 winreg.CloseKey(keyHandle)
@@ -107,27 +130,32 @@ def Spoof(mac):
                 keyHandle = winreg.OpenKey(handle, keyName, access=winreg.KEY_WRITE)
                 winreg.DeleteValue(keyHandle, REG_VALUE_NETWORKADDRESS)
                 winreg.CloseKey(keyHandle)
-                print("Mac address reset.Please reset your interface now")
+                print("MAC address reset.Please reset your interface now")
             except FileNotFoundError:
-                print("No spoof  was previously applied")
+                print("No spoof was previously applied")
             except OSError:
                 print("Failed to modify")
-    except TypeError: 
-        print("Bad Choice")
+    except (ValueError, TypeError):
+        print("Invalid input")
     winreg.CloseKey(handle)
 
-# TryCall(call) is a simple helper function that wraps subprocess.check_call around a try catch statement
-# If it fails we simply end it with a print statement saying there was a problem with execution
+
 def TryCall(call):
+    """
+    TryCall(call) is a simple helper function that wraps subprocess.check_call around a try catch statement
+    If it fails we simply end it with a print statement saying there was a problem with execution
+    """
     try:
         subprocess.check_call(call, shell=True)
     except subprocess.CalledProcessError:
         print("There was a problem with execution")
 
-# AdjustInterface(interfaceName, op) is a function that lets us work with the network "interface"
-# It basically figures out what we want to do and then calls netsh through the shell
 def AdjustInterface(interfaceName, op):
-    #Let's fgure out what command we want to do,  and set it to something netsh can use
+    """
+    AdjustInterface(interfaceName, op) is a function that lets us work with the network "interface"
+    It basically figures out what we want to do and then calls netsh through the shell
+    """
+    #Let's figure out what command we want to do,  and set it to something netsh can use
     cmd = ""
     if op == COMMAND_ON:
         cmd = "enable"
@@ -145,15 +173,21 @@ def AdjustInterface(interfaceName, op):
         TryCall("netsh interface set interface name=\"{0}\" disable".format(interfaceName))
         TryCall("netsh interface set interface name=\"{0}\" enable".format(interfaceName))
 
-#ListInterfaces() simply takes the shell output from "netsh show interface"
-#It tells user's what interfaces are available to work with
-#This is what they will pass as a argument to network.py
+
 def ListInterfaces():
+    """
+    ListInterfaces() simply takes the shell output from "netsh show interface"
+    It tells user's what interfaces are available to work with
+    This is what they will pass as a argument to network.py
+    """
     TryCall("netsh interface show interface")
 
-#Begin Script Execution
-#Check sys.argv length make sure we have more then 2 arguments being passed
+
 if len(sys.argv) >= 2: #check for a primary command
+    """
+    Begin Script Execution
+    Check sys.argv length make sure we have more then 2 arguments being passed
+    """
     if sys.argv[1].lower() == "list":
         ListInterfaces()
     elif sys.argv[1].lower() == "spoof":
@@ -162,7 +196,7 @@ if len(sys.argv) >= 2: #check for a primary command
         else: print("No mac address provided. Cannot continue")
     else:
         interface = sys.argv[1]
-		# make sure we have an argument that follows  our primary command
+        # make sure we have an argument that follows  our primary command
         if len(sys.argv) >= 3: 
             if sys.argv[2].lower() == "off":
                 AdjustInterface(interface, COMMAND_OFF)
