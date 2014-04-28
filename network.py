@@ -1,6 +1,6 @@
 """
 Windows Only Script
-Author: Gabriele M. Nunez (P13Darksight) (http://thecoconutcoder.com)
+Author: Gabriele M. Nunez (http://thecoconutcoder.com)
 Lets you enable/disable/list your network interfaces as well as spoof
 example for spoof
 --------------------------------------------
