@@ -7,7 +7,7 @@ network.py
 
 * ~~Better code documentation~~
 * Easier way to modify interfaces and adapters (Possibly alias them and bind them together?)
-* Implement Mac address generator
+* ~~Implement Mac address generator~~
 
 ##Some Examples
 ##Spoofing
