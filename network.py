@@ -37,24 +37,29 @@ COMMAND_LIST = 3
 COMMAND_RESET = 0
 REG_ADAPTERS = r"SYSTEM\CurrentControlSet\Control\Class\{4d36e972-e325-11ce-bfc1-08002be10318}"
 REG_VALUE_NETWORKADDRESS = "NetworkAddress"
-
 interface = "Local Area Connection"
 
-
-def MACGen(prefix):
+def MACGen():
     """
-    TODO need to implement
-    Generates a mac address with the specified prefix
+    Generates a random MAC address with the prefix 02
     """
-    if prefix == None:
-        prefix = "02"
-    mac = prefix
-
+    # start the mac address string off with the prefix 02
+    # keep it nice and simple just generate a random number
+    # then convert to chr then append to mac string
+    mac = "02"
+    part = 0
+    while part < 5:
+        c = random.randrange(0x10, 0x9f)
+        c = "{0:=2X}".format(c)
+        mac += c
+        part += 1
+    return mac
+		
 def RegSaveKey(key, path):
     """
     SaveKey(key, path) checks if a file exist, deletes it and then saves the registry key
-	Requires SeBackupPrivilege need to figure out how to get this privilege
-	Probably can get it through pywin32 (need to research it)
+    Requires SeBackupPrivilege need to figure out how to get this privilege
+    Probably can get it through pywin32 (need to research it)
     """
     if os.path.isfile(path):
         os.remove(path)
@@ -64,16 +69,22 @@ def RegSaveKey(key, path):
         print("Does not have permission to save key")
 		
 def Spoof(mac):
-    """ 
-    Spoof(mac) is a function that lets us modify our network card's physical address. 
+    """
+    Spoof(mac) is a function that lets us modify our network card's physical address.
     By doing this we can "imitate" other device's on the network.
     Many possibilities with spoofing
-	"""
-    # first open a handle to the key in the registry that contains all the adapter information
+	WARNING: May not work with Intel chips, researching better ways
+    """
+    # if mac is none then simply generate one and continue
+    if mac == None:
+        mac = MACGen()
+    # first open a handle to the key in the registry
+    # it'll contain all the info about the adapter
     handle = winreg.OpenKey(winreg.HKEY_LOCAL_MACHINE, REG_ADAPTERS)
     RegSaveKey(handle, "adapters.pyreg")
     index = 0
-    # loop indefinitely until either an OSError occurs which winreg.EnumKey will cause once the value at index isn't available or until we find properties
+    # loop indefinitely until either an OSError occurs which winreg.
+    # EnumKey will cause once the value at index isn't available or until we find properties
     # overkill to check for both but better safe than sorry
     while True:
         try:
@@ -138,18 +149,18 @@ def Spoof(mac):
     except (ValueError, TypeError):
         print("Invalid input")
     winreg.CloseKey(handle)
-
-
+	
 def TryCall(call):
     """
-    TryCall(call) is a simple helper function that wraps subprocess.check_call around a try catch statement
+    TryCall(call) is a simple helper function that wraps 
+    subprocess.check_call around a try catch statement
     If it fails we simply end it with a print statement saying there was a problem with execution
     """
     try:
         subprocess.check_call(call, shell=True)
     except subprocess.CalledProcessError:
         print("There was a problem with execution")
-
+		
 def AdjustInterface(interfaceName, op):
     """
     AdjustInterface(interfaceName, op) is a function that lets us work with the network "interface"
@@ -172,8 +183,7 @@ def AdjustInterface(interfaceName, op):
         print("Resetting interface: {0}".format(interfaceName))
         TryCall("netsh interface set interface name=\"{0}\" disable".format(interfaceName))
         TryCall("netsh interface set interface name=\"{0}\" enable".format(interfaceName))
-
-
+		
 def ListInterfaces():
     """
     ListInterfaces() simply takes the shell output from "netsh show interface"
@@ -181,8 +191,7 @@ def ListInterfaces():
     This is what they will pass as a argument to network.py
     """
     TryCall("netsh interface show interface")
-
-
+	
 if len(sys.argv) >= 2: #check for a primary command
     """
     Begin Script Execution
@@ -193,7 +202,8 @@ if len(sys.argv) >= 2: #check for a primary command
     elif sys.argv[1].lower() == "spoof":
         if len(sys.argv) >= 3:
             Spoof(sys.argv[2])
-        else: print("No mac address provided. Cannot continue")
+        else:
+            Spoof(None)
     else:
         interface = sys.argv[1]
         # make sure we have an argument that follows  our primary command
